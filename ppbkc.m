@@ -56,52 +56,29 @@ mx2 = [D_1 D_2 D_3]'*scaledTpr(ix+1:end,:);
 W_ri = (mx1\mx2)';
 
 %% compute normalization for kernel
-iKernelExtension     = 512;
-distance             = nan(iKernelExtension,iKernelExtension);
-iCenterX             = iKernelExtension/2;
-iCenterY             = iCenterX;
-fKernelResolution = 0.5; % [mm]
-iMaxirradtiation_mm  = iKernelExtension/2*fKernelResolution;
-iNumofRadii          = iMaxirradtiation_mm/fKernelResolution;
-
-[X,Y] = meshgrid(-iKernelExtension/2+1:iKernelExtension/2);
-Z = sqrt(X.^2 + Y.^2)*0.5;
-primflu = interp1(primaryFluence(:,1),primaryFluence(:,2),Z,'linear',0);
-
-fResolutionFactor = 1/fKernelResolution;
-iNumOfRadii_step  = 1:iNumofRadii;
-
-fRNorm = zeros(iNumofRadii,1);
-
-% this is a radial integration over the primary fluence!
-% this may be an option to improve the numerical stability of the code here
-% by replacing the integration with a sound approach!
-for i = 1:iKernelExtension
-    for j=1:iKernelExtension
-        fRadius_mm(i,j) = sqrt(((iKernelExtension/2-i+1)*fKernelResolution)^2 + ((iKernelExtension/2-j+1)*fKernelResolution)^2);
-        fRadius_RF(i,j) = fRadius_mm(i,j).*fResolutionFactor;
-        iRadius_RF = round(fRadius_RF(i,j),0);
-        viRadius_RF(i,j) = iRadius_RF;
-        if iRadius_RF < iNumofRadii
-            fRNorm(iRadius_RF+1) = fRNorm(iRadius_RF+1)+primflu(i,j);
-        end
-    end
-end
+kernelExtension = 512; % pixel
+kernelResolution = 0.5; % mm
+fRNorm = ppbkc_calcKernelNorm(kernelExtension,kernelResolution,primaryFluence);
 
 %% computation of correction factors for output factor
 
 FWHM  = params('fwhm_gauss'); % mm
 sigma = FWHM/(sqrt(8*log(2))); % mm
-sigmaVox = sigma/fKernelResolution; % vox
+sigmaVox = sigma/kernelResolution; % vox
+iCenter = kernelExtension/2;
 
 correctionFactors = ones(size(outputFactor,1),1);
+
+[X,Y] = meshgrid(-kernelExtension/2+1:kernelExtension/2);
+Z = sqrt(X.^2 + Y.^2)*0.5;
+primflu = interp1(primaryFluence(:,1),primaryFluence(:,2),Z,'linear',0);
 
 for i = 1:numel(outputFactor(:,1))
         
     if outputFactor(i,1) < 5.4 * sqrt(2)*sigma
         
-        lowerLimit = round(iCenterX - outputFactor(i,1)/2/fKernelResolution + 1);
-        upperLimit = floor(iCenterX+outputFactor(i,1)/2/fKernelResolution);
+        lowerLimit = round(iCenter - outputFactor(i,1)/2/kernelResolution + 1);
+        upperLimit = floor(iCenter + outputFactor(i,1)/2/kernelResolution);
 
         fieldShape = 0*primflu;
         fieldShape(lowerLimit:upperLimit,lowerLimit:upperLimit) = 1;
@@ -110,16 +87,16 @@ for i = 1:numel(outputFactor(:,1))
                     .* 1/(sqrt(2*pi)*sigmaVox) .* exp( -Y.^2 / (2*sigmaVox^2) );
                
 
-        convRes = fftshift( ifft2(    fft2(fieldShape .*primflu,iKernelExtension,iKernelExtension) ...
-                                   .* fft2(gaussFilter,iKernelExtension,iKernelExtension) ) );
-        correctionFactors(i) = 1/convRes(iCenterX-1,iCenterY-1);
+        convRes = fftshift( ifft2(    fft2(fieldShape .*primflu,kernelExtension,kernelExtension) ...
+                                   .* fft2(gaussFilter,kernelExtension,kernelExtension) ) );
+        correctionFactors(i) = 1/convRes(iCenter-1,iCenter-1);
                      
     end
     
 end
 
 %% compute equivalent field size for circular fields!
-fEquivalentFieldSize = iNumOfRadii_step.*fKernelResolution*sqrt(pi);
+fEquivalentFieldSize = [1:kernelExtension/2].*kernelResolution*sqrt(pi);
 
 %% calculate corrected output factors at equivalent field size
 correctedOutputFactor = interp1(outputFactor(:,1),outputFactor(:,2).*correctionFactors,fEquivalentFieldSize, 'linear', 'extrap');
