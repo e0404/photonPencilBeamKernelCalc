@@ -136,5 +136,5 @@ xlabel('mm')
 ylabel('a.u.')
 box on
 grid minor
-legend({'kernel 1 (calc.)','kernel 2 (calc.)','kernel 3 (calc.)', ...
-        'kernel 1 (matRad)','kernel 2 (matRad)','kernel 3 (matRad)'});
+legend({'kernel 1 (matRad)','kernel 2 (matRad)','kernel 3 (matRad)' ...
+       ,'kernel 1 (calc.)','kernel 2 (calc.)','kernel 3 (calc.)'});
