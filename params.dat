@@ -1,0 +1,7 @@
+# primary collimator
+source_collimator_distance 345.000000
+source_tray_distance 565.000000
+# use this ssd to measure the output factor
+dose_reference_ssd 950.000000
+# depth to measure output factor
+dose_reference_depth 50.000000
