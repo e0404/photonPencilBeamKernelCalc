@@ -1,6 +1,6 @@
 function fRNorm = ppbkc_calcKernelNorm(kernelExtension,kernelResolution,primaryFluence)
 
-mode = 'pdc'; % can be either 'pdc' or 'radialInt'
+mode = 'radialInt'; % can be either 'pdc' or 'radialInt'
 
 if strcmp(mode,'radialInt')
     
