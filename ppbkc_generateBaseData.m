@@ -54,7 +54,7 @@ ftmp = -log(tpr_0(ix+1:end));
 fSy  = sum(ftmp);
 fSxy = sum(ftmp.*tprDepths(ix+1:end));
 
-% mu = 0.005066; % reference value from literature
+% mu = 0.005066; % reference value for 6MV from literature
 machine.data.m = ( fSxy - ( (fSx*fSy) / length(tpr_0(ix+1:end)) ) ) / ...
                  ( fSxx - ( (fSx^2)   / length(tpr_0(ix+1:end)) ) );
 
