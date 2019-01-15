@@ -15,6 +15,8 @@ if strcmp(mode,'radialInt')
 
     % interpolate data on original grid
     fRNorm = 4*interp1(r_mid,int,r,'spline')';
+    
+    fRNorm(1) = primaryFluence(1,2);
 
     % wo kommt der bekackte faktor 4 her? wieso brauch ich den, damit es
     % wieder passt? --> vermutlich fehlt ein faktor 1/4 beim anderen kern!

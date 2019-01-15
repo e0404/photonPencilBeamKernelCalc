@@ -1,7 +1,7 @@
-function machine = ppbkc_generateBaseData(name)
+function machine = ppbkc_generateBaseData(name,inputDir)
 
 %% read parameter file
-fileHandle = fopen('params.dat');
+fileHandle = fopen([inputDir filesep 'params.dat']);
 tmp = textscan(fileHandle,'%s %f','CommentStyle',{'#'});
 fclose(fileHandle);
 
@@ -24,7 +24,7 @@ machine.data.energy         = params('photon_energy');
 machine.data.kernelPos      = [0:0.5:179.5];
 
 %% load primary fluence
-fileHandle = fopen('primflu.dat');
+fileHandle = fopen([inputDir filesep 'primflu.dat']);
 machine.data.primaryFluence = cell2mat(textscan(fileHandle,'%f %f','CommentStyle',{'#'}));
 fclose(fileHandle);
 
@@ -63,9 +63,9 @@ maxPos_fun = @(x) (log(machine.data.m)-log(x))/(machine.data.m-x);
 
 options = optimoptions('fmincon','Display','off');
 
-machine.data.beta(1) = fmincon(@(x) (maxPos_fun(x) - meanMaxPos_mm).^2,1,[],[],[],[],0,1000,[],options);
-machine.data.beta(2) = fmincon(@(x) (maxPos_fun(x) - (meanMaxPos_mm+1/machine.data.m)/2).^2,1,[],[],[],[],0,1000,[],options);
-machine.data.beta(3) = fmincon(@(x) (maxPos_fun(x) - 1/machine.data.m).^2,1,[],[],[],[],0,1000,[],options);
+machine.data.betas(1) = fmincon(@(x) (maxPos_fun(x) - meanMaxPos_mm).^2,1,[],[],[],[],0,1000,[],options);
+machine.data.betas(2) = fmincon(@(x) (maxPos_fun(x) - (meanMaxPos_mm+1/machine.data.m)/2).^2,1,[],[],[],[],0,1000,[],options);
+machine.data.betas(3) = fmincon(@(x) (maxPos_fun(x) - 1/machine.data.m).^2,1,[],[],[],[],0,1000,[],options);
 
 %% compute normalization for kernel
 kernelExtension  = 720; % pixel
@@ -74,7 +74,7 @@ kernelNorm       = ppbkc_calcKernelNorm(kernelExtension,kernelResolution,machine
 
 %% output factor
 % read data
-fileHandle = fopen('of.dat');
+fileHandle = fopen([inputDir filesep 'of.dat']);
 outputFactor = cell2mat(textscan(fileHandle,'%f %f','CommentStyle',{'#'}));
 fclose(fileHandle);
 
@@ -108,12 +108,12 @@ for i = 1:501
                   'spline');
               
     % compute weights of depth dose components 
-    D_1 = (machine.data.beta(1)/(machine.data.beta(1)-machine.data.m)) * ...
-        (exp(-machine.data.m*tprDepths(ix+1:end))-exp(-machine.data.beta(1)*tprDepths(ix+1:end)));
-    D_2 = (machine.data.beta(2)/(machine.data.beta(2)-machine.data.m)) * ...
-        (exp(-machine.data.m*tprDepths(ix+1:end))-exp(-machine.data.beta(2)*tprDepths(ix+1:end)));
-    D_3 = (machine.data.beta(3)/(machine.data.beta(3)-machine.data.m)) * ...
-        (exp(-machine.data.m*tprDepths(ix+1:end))-exp(-machine.data.beta(3)*tprDepths(ix+1:end)));
+    D_1 = (machine.data.betas(1)/(machine.data.betas(1)-machine.data.m)) * ...
+        (exp(-machine.data.m*tprDepths(ix+1:end))-exp(-machine.data.betas(1)*tprDepths(ix+1:end)));
+    D_2 = (machine.data.betas(2)/(machine.data.betas(2)-machine.data.m)) * ...
+        (exp(-machine.data.m*tprDepths(ix+1:end))-exp(-machine.data.betas(2)*tprDepths(ix+1:end)));
+    D_3 = (machine.data.betas(3)/(machine.data.betas(3)-machine.data.m)) * ...
+        (exp(-machine.data.m*tprDepths(ix+1:end))-exp(-machine.data.betas(3)*tprDepths(ix+1:end)));
 
     mx1 = [D_1 D_2 D_3]'*[D_1 D_2 D_3];
     mx2 = [D_1 D_2 D_3]'*scaledTpr(ix+1:end,:);
