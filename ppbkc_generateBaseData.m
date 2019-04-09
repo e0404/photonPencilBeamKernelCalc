@@ -30,13 +30,28 @@ fclose(fileHandle);
 
 %% compute attenuation coefficent
 % load tpr
-fileHandle = fopen('tpr.dat');
-tprTmp = cell2mat(textscan(fileHandle,'%f %f %f %f %f %f %f %f %f %f %f %f %f %f','CommentStyle',{'#'}));
+fileHandle = fopen([inputDir filesep 'tpr.dat']);
+tprTmp = cell2mat(textscan(fileHandle,'%f','CommentStyle',{'#'}));
 fclose(fileHandle);
 
-tprFieldSizes = tprTmp(1,2:end);
-tprDepths     = tprTmp(2:end,1);
-tpr           = tprTmp(2:end,2:end);
+% understand tpr data and extrapolate field size 0mm if necessary
+numOfFieldSizes = find(diff(tprTmp)<0,1,'first') - 1;
+tprTmp = reshape(tprTmp,numOfFieldSizes + 1,[])';
+minFieldSize = tprTmp(1,2);
+if minFieldSize > 0
+    tprFieldSizes = [0 tprTmp(1,2:end)];
+    tprDepths     = tprTmp(2:end,1);
+    tpr           = tprTmp(2:end,2:end);
+
+    tprZero = NaN*ones(size(tpr,1),1);
+    for i = 1:size(tpr,1)
+        tprZero(i) = interp1(tprFieldSizes(2:end),tpr(i,:),0,'linear','extrap');
+    end
+
+    tpr = [tprZero tpr];
+else
+    tpr = tprTmp;
+end
 
 % find max positions
 [tprMax,tprMaxIx] = max(tpr);
