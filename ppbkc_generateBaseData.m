@@ -31,28 +31,41 @@ fclose(fileHandle);
 
 %% compute attenuation coefficent
 % load tpr
+tprTmp = [];
 fileHandle = fopen([inputDir filesep 'tpr.dat']);
-tprTmp = cell2mat(textscan(fileHandle,'%f','CommentStyle',{'#'}));
+while ~feof(fileHandle)
+    currLine = fgetl(fileHandle);
+    if currLine(1) ~= '#'
+        % fprintf([currLine '\n']);
+        tprTmp = [tprTmp; str2num(currLine)];
+    end
+end
 fclose(fileHandle);
 
-% understand tpr data and extrapolate field size 0mm if necessary
-numOfFieldSizes = find(diff(tprTmp)<0,1,'first') - 1;
-tprTmp = reshape(tprTmp,numOfFieldSizes + 1,[])';
-minFieldSize = tprTmp(1,2);
-if minFieldSize > 0
-    tprFieldSizes = [0 tprTmp(1,2:end)];
-    tprDepths     = tprTmp(2:end,1);
-    tpr           = tprTmp(2:end,2:end);
-
-    tprZero = NaN*ones(size(tpr,1),1);
-    for i = 1:size(tpr,1)
-        tprZero(i) = interp1(tprFieldSizes(2:end),tpr(i,:),0,'linear','extrap');
+% check if field size 0 included, if not interpolate
+if tprTmp(1,2) ~= 0
+    
+    % interpolate
+    tprZero = NaN*ones(size(tprTmp,1)-1,1);
+    for i = 1:numel(tprZero)
+        tprZero(i) = interp1(tprTmp(1,2:end),tprTmp(i+1,2:end),0,'linear','extrap');        
     end
 
-    tpr = [tprZero tpr];
-else
-    tpr = tprTmp;
+    % insert
+    tprTmp = [tprTmp(:,1) [0;tprZero] tprTmp(:,2:end)];
+    
 end
+
+% refactor into field size, depths and tpr values
+tprFieldSizes = tprTmp(1,2:end);
+tprDepths     = tprTmp(2:end,1);
+tpr           = tprTmp(2:end,2:end);
+
+% uncomment for debug plot
+% semilogx(tprDepths,tpr)
+% legend(arrayfun(@(n) ['field size = ' num2str(n)],tprFieldSizes,'Uni',0))
+% xlabel('[mm]')
+% ylabel('rel. dose')
 
 % find max positions
 [tprMax,tprMaxIx] = max(tpr);
