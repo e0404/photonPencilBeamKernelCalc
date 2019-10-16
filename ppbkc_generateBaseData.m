@@ -23,6 +23,8 @@ machine.meta.SCD           = params('source_collimator_distance');
 machine.data.energy         = params('photon_energy');
 machine.data.kernelPos      = [0:0.5:179.5];
 machine.data.fwhm           = params('fwhm_gauss');
+machine.data.iNumKernel     = params('i_num_kernel');
+machine.data.electronRangeIntensity     = params('electron_range_intensity');
 
 %% load primary fluence
 fileHandle = fopen([inputDir filesep 'primflu.dat']);
@@ -61,6 +63,8 @@ tprFieldSizes = tprTmp(1,2:end);
 tprDepths     = tprTmp(2:end,1);
 tpr           = tprTmp(2:end,2:end);
 
+machine.data.surfaceDose = tpr(1,1);
+
 % uncomment for debug plot
 % semilogx(tprDepths,tpr)
 % legend(arrayfun(@(n) ['field size = ' num2str(n)],tprFieldSizes,'Uni',0))
@@ -83,7 +87,7 @@ ftmp = -log(tpr_0(ix+1:end));
 fSy  = sum(ftmp);
 fSxy = sum(ftmp.*tprDepths(ix+1:end));
 
-% mu = 0.005066; % reference value for 6MV from literature
+% machine.data.m = 0.005066; % reference value for 6MV from literature
 machine.data.m = ( fSxy - ( (fSx*fSy) / length(tpr_0(ix+1:end)) ) ) / ...
                  ( fSxx - ( (fSx^2)   / length(tpr_0(ix+1:end)) ) );
 
@@ -152,7 +156,7 @@ for i = 1:501
     D_1_spline = interp1(tprFieldSizes,W_ri(:,1),equivalentFieldSizes, 'spline');
     D_2_spline = interp1(tprFieldSizes,W_ri(:,2),equivalentFieldSizes, 'spline');
     D_3_spline = interp1(tprFieldSizes,W_ri(:,3),equivalentFieldSizes, 'spline');
-
+    
 
     fGradFitPar_1 = [correctedOutputFactorAtEquiFieldSizes(1)*D_1_spline(1), ...
                      diff(correctedOutputFactorAtEquiFieldSizes.*D_1_spline)];
@@ -164,8 +168,16 @@ for i = 1:501
     machine.data.kernel(i).kernel1 = fGradFitPar_1' ./ kernelNorm;
     machine.data.kernel(i).kernel2 = fGradFitPar_2' ./ kernelNorm;
     machine.data.kernel(i).kernel3 = fGradFitPar_3' ./ kernelNorm;
-
+    
+    if machine.data.iNumKernel == 4
+        W_ri(:,4) = tpr(1,:)./tpr(1,1);
+        D_4_spline = interp1(tprFieldSizes,W_ri(:,4),equivalentFieldSizes, 'spline');
+        fGradFitPar_4 = [correctedOutputFactorAtEquiFieldSizes(1)*D_4_spline(1), ...
+                         diff(correctedOutputFactorAtEquiFieldSizes.*D_4_spline)];
+        machine.data.kernel(i).kernel4 = fGradFitPar_4' ./ kernelNorm;        
+    end
+    
 end
 
 % save file
-save(name,'machine');
+save(strcat('photons_',name),'machine');
