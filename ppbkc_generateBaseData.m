@@ -23,7 +23,6 @@ machine.meta.SCD           = params('source_collimator_distance');
 machine.data.energy         = params('photon_energy');
 machine.data.kernelPos      = [0:0.5:179.5];
 machine.data.fwhm           = params('fwhm_gauss');
-machine.data.iNumKernel     = params('i_num_kernel');
 machine.data.electronRangeIntensity     = params('electron_range_intensity');
 
 %% load primary fluence
