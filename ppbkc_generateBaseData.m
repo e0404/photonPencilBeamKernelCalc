@@ -152,30 +152,26 @@ for i = 1:501
     mx2 = [D_1 D_2 D_3]'*scaledTpr(ix+1:end,:);
 
     W_ri = (mx1\mx2)';
+    W_ri(:,4) = tpr(1,:)./tpr(1,1);
     
     D_1_spline = interp1(tprFieldSizes,W_ri(:,1),equivalentFieldSizes, 'spline');
     D_2_spline = interp1(tprFieldSizes,W_ri(:,2),equivalentFieldSizes, 'spline');
     D_3_spline = interp1(tprFieldSizes,W_ri(:,3),equivalentFieldSizes, 'spline');
+    D_4_spline = interp1(tprFieldSizes,W_ri(:,4),equivalentFieldSizes, 'spline');
     
-
     fGradFitPar_1 = [correctedOutputFactorAtEquiFieldSizes(1)*D_1_spline(1), ...
                      diff(correctedOutputFactorAtEquiFieldSizes.*D_1_spline)];
     fGradFitPar_2 = [correctedOutputFactorAtEquiFieldSizes(1)*D_2_spline(1), ...
                      diff(correctedOutputFactorAtEquiFieldSizes.*D_2_spline)];
     fGradFitPar_3 = [correctedOutputFactorAtEquiFieldSizes(1)*D_3_spline(1), ...
                      diff(correctedOutputFactorAtEquiFieldSizes.*D_3_spline)];
-
+    fGradFitPar_4 = [correctedOutputFactorAtEquiFieldSizes(1)*D_4_spline(1), ...
+                         diff(correctedOutputFactorAtEquiFieldSizes.*D_4_spline)];
+        
     machine.data.kernel(i).kernel1 = fGradFitPar_1' ./ kernelNorm;
     machine.data.kernel(i).kernel2 = fGradFitPar_2' ./ kernelNorm;
     machine.data.kernel(i).kernel3 = fGradFitPar_3' ./ kernelNorm;
-    
-    if machine.data.iNumKernel == 4
-        W_ri(:,4) = tpr(1,:)./tpr(1,1);
-        D_4_spline = interp1(tprFieldSizes,W_ri(:,4),equivalentFieldSizes, 'spline');
-        fGradFitPar_4 = [correctedOutputFactorAtEquiFieldSizes(1)*D_4_spline(1), ...
-                         diff(correctedOutputFactorAtEquiFieldSizes.*D_4_spline)];
-        machine.data.kernel(i).kernel4 = fGradFitPar_4' ./ kernelNorm;        
-    end
+    machine.data.kernel(i).kernel4 = fGradFitPar_4' ./ kernelNorm;
     
 end
 

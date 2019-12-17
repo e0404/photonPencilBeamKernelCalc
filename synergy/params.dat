@@ -1,7 +1,6 @@
 SAD 1000.0
 photon_energy 6.0
 fwhm_gauss 6.000000
-i_num_kernel 4
 electron_range_intensity 0.001
 # primary collimator
 source_collimator_distance 345.000000
