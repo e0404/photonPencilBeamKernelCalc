@@ -20,10 +20,10 @@ machine.meta.SCD           = params('source_collimator_distance');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% write data
-machine.data.energy         = params('photon_energy');
-machine.data.kernelPos      = [0:0.5:179.5];
-machine.data.fwhm           = params('fwhm_gauss');
-machine.data.electronRangeIntensity     = params('electron_range_intensity');
+machine.data.energy                 = params('photon_energy');
+machine.data.kernelPos              = [0:0.5:179.5];
+machine.data.fwhm                   = params('fwhm_gauss');
+machine.data.electronRangeIntensity = params('electron_range_intensity');
 
 %% load primary fluence
 fileHandle = fopen([inputDir filesep 'primflu.dat']);
