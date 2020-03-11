@@ -5,9 +5,8 @@ clear
 %% tpr
 
 % read data from file
-fileHandle = fopen('tpr.dat');
-tprTmp = cell2mat(textscan(fileHandle,'%f %f %f %f %f %f %f %f %f %f %f %f %f %f','CommentStyle',{'#'}));
-fclose(fileHandle);
+tmpTable = readtable('tpr.dat');
+tprTmp = table2array(tmpTable);
 
 tprFieldSizes = tprTmp(1,2:end);
 tprDepths     = tprTmp(2:end,1);
@@ -23,7 +22,7 @@ xlabel('depth [mm]')
 ylabel('a.u.')
 grid minor
 box on
-legendStringsFieldSizes = mat2cell(tprFieldSizes',ones(13,1));
+legendStringsFieldSizes = mat2cell(tprFieldSizes',ones(length(tprFieldSizes),1));
 legendStringsFieldSizes = cellfun(@num2str,legendStringsFieldSizes,'UniformOutput',false);
 legend(legendStringsFieldSizes);
 
